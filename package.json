@@ -11,7 +11,9 @@
     "build": "next build --webpack",
     "start": "next start --hostname 127.0.0.1",
     "typecheck": "tsc --noEmit",
-    "db:local": "node scripts/prepare-local.mjs"
+    "db:local": "node scripts/prepare-local.mjs",
+    "db:migrate": "node scripts/migrate-postgres.mjs",
+    "vercel:build": "npm run db:migrate && npm run build"
   },
   "dependencies": {
     "@netlify/blobs": "11.1.6",
