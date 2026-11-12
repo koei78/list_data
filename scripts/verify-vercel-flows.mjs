@@ -29,7 +29,7 @@ try{
   const verify=await fetch(base+'/api/ingest',{method:'POST',headers:{cookie:cookie(),'content-type':'application/json',authorization:'Bearer '+config.token},body:JSON.stringify({mode:'verify-backup'}),signal:AbortSignal.timeout(60000)});
   const result=await verify.json();assert.equal(verify.status,200,JSON.stringify(result));assert.equal(result.privateStorage,true);assert.equal(result.write,true);assert.equal(result.read,true);assert.equal(result.list,true);pass('private backup storage write, read, list and cleanup');
  }
- const home=await get('/');assert.equal(home.status,200);const html=await home.text();assert(html.includes(manifest.unique_stores.toLocaleString('en-US')));assert(!html.includes('__next_error__'));pass('homepage renders the imported facility total');
+ const home=await get('/');assert.equal(home.status,200);const html=await home.text();assert(!html.includes(manifest.unique_stores.toLocaleString('en-US')));assert(!html.includes('掲載施設数'));assert(!html.includes('__next_error__'));pass('homepage renders without disclosing the facility total');
  const search=await get('/restaurants?name='+encodeURIComponent(sample.name)+'&prefecture='+encodeURIComponent(sample.prefecture));assert.equal(search.status,200);assert((await search.text()).includes('/restaurant/'+sample.id));
  const detail=await get('/restaurant/'+sample.id);assert.equal(detail.status,200);const detailHtml=await detail.text();assert(detailHtml.includes(sample.name));pass('store-name search and store detail');
  assert.equal((await get('/api/export')).status,401);assert.equal((await get('/api/backup')).status,403);pass('anonymous data export and backup remain restricted');

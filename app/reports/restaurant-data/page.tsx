@@ -1,11 +1,13 @@
+import {viewer} from '../../../lib/auth';
 import {publicMetadata} from '../../../lib/seo';
 import {publicAreaStats,publicSources,phoneRate,samplePath} from '../../../lib/public-data';
 import {areaPath,jsonLd} from '../../../lib/directory';
 import {ORIGIN} from '../../../lib/config';
 import {safeUrl} from '../../../lib/normalize';
 import {Breadcrumb,Title,ScopeNote,formatNumber} from '../../components';
-export const metadata=publicMetadata('東京・神奈川・埼玉・千葉の飲食店リスト調査｜市町村別の施設数・電話番号掲載率','公開対象の飲食店登録施設を市町村別に独自集計。施設数、電話番号掲載数・掲載率、業態「飲食店」の件数、出典・基準日を確認し、集計CSVを無料で取得できます。','/reports/restaurant-data');
-export default async function RestaurantReport(){
+export const metadata=publicMetadata('地域別の飲食店情報と確認方法','地域ごとの店舗情報と出典を確認し、営業先の候補を整理する方法を紹介します。','/reports/restaurant-data');
+export default async function RestaurantReport(){if((await viewer())?.role!=='admin')return <><Breadcrumb items={[["地域別の飲食店情報"]]}/><Title title="地域別の飲食店情報と確認方法">地域を選び、店舗名・所在地・電話番号と出典を確認できます。</Title><ScopeNote/><section className="panel inset"><h2>営業エリアを選ぶ</h2><p>掲載地域から候補を探し、各店舗の出典と情報の確認日をご確認ください。現在の営業状況や連絡先は店舗の公式情報などでも確認してください。</p><div className="actions-row"><a className="button primary" href="/areas">地域から探す</a><a className="button" href="/sample-list">無料サンプルを確認する</a></div></section></>;return <InternalReport/>;}
+async function InternalReport(){
  const [rows,sources]=await Promise.all([publicAreaStats(),publicSources()]);
  const total=rows.reduce((n,r)=>n+Number(r.n),0),phones=rows.reduce((n,r)=>n+Number(r.phones||0),0);
  const latest=rows.map(r=>r.updated).filter(Boolean).sort().at(-1)?.slice(0,10);
