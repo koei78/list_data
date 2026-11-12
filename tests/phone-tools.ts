@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {normalizePhoneInput,checkPhoneLines,phoneRowsCSV,PHONE_INPUT_LIMIT} from '../lib/phone-tools';
+const valid=[['０３（１２３４）５６７８','0312345678'],['03―1234ー5678','0312345678'],['+81 90 1234 5678','09012345678'],['+81(0)3-1234-5678','0312345678'],['04992-2-2942','0499222942']];
+for(const [raw,want] of valid)assert.equal(normalizePhoneInput(raw),want);
+for(const raw of ['','03-1234','1234567890','03-1234-5678 内線12','0312345678/0311112222','=0312345678','+1 212 555 1234','a'.repeat(81)])assert.equal(normalizePhoneInput(raw),null);
+const result=checkPhoneLines('03-1234-5678\r\n\r\n０３（１２３４）５６７８\r\n+81 90 1234 5678\r\n=1+1');
+assert.deepEqual([result.total,result.unique,result.duplicates,result.invalid],[4,2,1,1]);
+assert.deepEqual([result.rows[1].line,result.rows[1].firstLine,result.rows[1].status],[3,1,'重複']);
+assert.equal(checkPhoneLines(' \n\t').total,0);
+assert.equal(checkPhoneLines(Array(2000).fill('0312345678').join('\n')).duplicates,1999);
+assert.throws(()=>checkPhoneLines(Array(2001).fill('0').join('\n')),/2,000/);
+assert.throws(()=>checkPhoneLines('a'.repeat(PHONE_INPUT_LIMIT+1)),/長すぎ/);
+const csv=phoneRowsCSV(result.rows);assert(csv.startsWith('\uFEFF'));assert(csv.includes('"\'=1+1"'));assert(csv.includes('"0312345678"'));
+assert(!csv.includes('"=1+1"'));
+assert(phoneRowsCSV(checkPhoneLines(' \t+SUM(1,1)').rows).includes("' \t+SUM"));
+console.log('Phone tools: format variants, ambiguity, duplicates, blank lines, limits and CSV formula safety passed.');

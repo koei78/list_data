@@ -1,0 +1,6 @@
+export function normalize(value:string=''){return value.normalize('NFKC').toLowerCase().replace(/[\s　]/g,'').replace(/[‐‑–—ー−]/g,'-');}
+export function phone(value:string=''){let s=value.normalize('NFKC').replace(/[^\d+]/g,'');if(s.startsWith('+81'))s='0'+s.slice(3);return s;}
+export function csvCell(value:unknown){let s=String(value??'');if(/^[\s]*[=+@-]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';}
+export function parseCSV(text:string):string[][]{const rows:string[][]=[];let row:string[]=[],cell='',quote=false;for(let i=0;i<text.length;i++){const c=text[i];if(c==='"'){if(quote&&text[i+1]==='"'){cell+='"';i++;}else quote=!quote;}else if(c===','&&!quote){row.push(cell);cell='';}else if((c==='\n'||c==='\r')&&!quote){if(c==='\r'&&text[i+1]==='\n')i++;row.push(cell);if(row.some(x=>x))rows.push(row);row=[];cell='';}else cell+=c;}if(quote)throw new Error('CSVの引用符が閉じていません');row.push(cell);if(row.some(x=>x))rows.push(row);if(rows[0]?.[0])rows[0][0]=rows[0][0].replace(/^\uFEFF/,'');return rows;}
+export function safeUrl(value:string|null){if(!value)return null;try{const u=new URL(value);return ['https:','http:'].includes(u.protocol)?u.href:null;}catch{return null;}}
+export const xml=(s:any)=>String(s??'').replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]!));

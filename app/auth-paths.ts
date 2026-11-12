@@ -1,0 +1,2 @@
+export function safeReturnTo(value:string){try{const u=new URL(value,'https://local.invalid');return value.startsWith('/')&&!value.startsWith('//')&&u.origin==='https://local.invalid'&&!['/login','/logout'].includes(u.pathname)?u.pathname+u.search+u.hash:'/mypage';}catch{return '/mypage';}}
+export function signInPath(returnTo='/mypage'){return '/login?return_to='+encodeURIComponent(safeReturnTo(returnTo));}

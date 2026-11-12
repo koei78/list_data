@@ -1,0 +1,9 @@
+import fs from 'node:fs';
+import path from 'node:path';
+const input=process.argv[2];const output=process.argv[3];if(!input||!output)throw new Error('Usage: node scripts/prepare-tokyo-data.mjs source.ndjson output.ndjson');
+const records=fs.readFileSync(input,'utf8').trim().split('\n').map(l=>JSON.parse(l));
+function category(record){const categories=[...new Set(record.public.permitTypes.map(t=>t.match(/^飲食店営業\((.+)\)$/)?.[1]||'飲食店'))];return categories.length===1?categories[0]:'複数の許可区分';}
+const source={id:'tokyo-food-permits-20260930',name:'東京都保健医療局 食品関係営業台帳（許可）',url:'https://www.hokeniryo.metro.tokyo.lg.jp/kenkou/hokenjo_daicho/shokuhineigyokyokadaicho',license:'CC BY（版番号の明記なし）',license_url:'https://spec.api.metro.tokyo.lg.jp/spec/t000055d0000000361-cc626c06e1fd5f5bbcd5b8a48781eb48-0',record_date:'2026-09-30',scope:'多摩地域（八王子市・町田市を除く）および島しょ地域の飲食店営業許可施設。給食・ホテル等を含む。営業状況・営業時間・開業日・決裁権は未確認。出典を加工。'};
+const mapped=records.map(x=>({id:x.id,name:x.public.name,address:x.public.address,prefecture:x.public.prefecture,municipality:x.public.municipality,category:category(x),phone:x.public.phone,kana:x.public.nameKana,postal_code:x.public.postalCode,hours:null,open_time:null,close_time:null,holiday:null,station:null,store_type:null,opened_at:null,store_count:null,latitude:null,longitude:null,business_status:'未確認',operator_name:x.private.operatorName,corporate_number:x.private.corporateNumber,representative_name:x.private.representativeName,decision_maker_name:null,decision_maker_role:null,authority_status:'未確認',website:null,sns:null,sales_info:null,checked_at:x.public.checkedAt,verification:'資料確認済み',provenance:{...x.provenance,permitTypes:x.public.permitTypes}}));
+fs.writeFileSync(output,mapped.map(x=>JSON.stringify(x)).join('\n')+'\n');fs.writeFileSync(path.join(path.dirname(output),'source.json'),JSON.stringify(source,null,2));console.log(JSON.stringify({records:mapped.length,output}));
+

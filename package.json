@@ -1,0 +1,38 @@
+{
+  "name": "tenkai-restaurant-database",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "next dev --hostname 127.0.0.1",
+    "build": "next build --webpack",
+    "start": "next start --hostname 127.0.0.1",
+    "typecheck": "tsc --noEmit",
+    "db:local": "node scripts/prepare-local.mjs"
+  },
+  "dependencies": {
+    "@netlify/blobs": "11.1.6",
+    "@netlify/database": "2.0.1",
+    "@netlify/identity": "2.0.0",
+    "lucide-react": "1.31.0",
+    "next": "16.3.4",
+    "pg": "^8.16.3",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "server-only": "^0.0.1",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.3.14",
+    "@netlify/plugin-nextjs": "5.16.4",
+    "@types/node": "22.19.19",
+    "@types/pg": "^8.15.6",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "tsx": "^4.20.6",
+    "typescript": "5.9.3"
+  }
+}

@@ -1,0 +1,62 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {db,closeDatabase} from '../lib/database-driver';
+import {postgresSql,upsertStatement} from '../lib/sql';
+import {POST as action} from '../app/api/action/route';
+import {GET as exportList} from '../app/api/export/route';
+import {viewer,canReadPrivate} from '../lib/auth';
+import {search} from '../lib/search';
+import {safeReturnTo} from '../app/auth-paths';
+if(process.env.NETLIFY_LOCAL_DB!=='1'||process.env.NETLIFY==='true')throw new Error('Local database only');
+const checks:string[]=[];
+function check(name:string,fn:()=>unknown){fn();checks.push(name);console.log('PASS '+name);}
+const query=async(sql:string,args:any[]=[])=>db().prepare(sql).bind(...args).all();
+const one=async(sql:string,args:any[]=[])=>db().prepare(sql).bind(...args).first();
+const fixture='migration-test-',members=[fixture+'member',fixture+'other',fixture+'admin'];
+const signIn=(id:string|null)=>{(globalThis as any).netlifyIdentityContext=id?{user:{sub:id,email:id+'@example.test',user_metadata:{full_name:'Test'}}}:undefined;};
+async function post(body:any,origin='http://127.0.0.1:3000'){return action(new Request('http://127.0.0.1:3000/api/action',{method:'POST',headers:{origin,'content-type':'application/json'},body:JSON.stringify(body)}));}
+async function cleanup(){for(const id of members){await query('DELETE FROM sales_list_items WHERE list_id IN (SELECT id FROM sales_lists WHERE user_id=?)',[id]);for(const table of ['favorites','disclosure_grants','inquiries','sales_lists','saved_searches','search_history'])await query(`DELETE FROM ${table} WHERE user_id=?`,[id]);await query('DELETE FROM audit_logs WHERE actor=?',[id]);await query('DELETE FROM users WHERE id=?',[id]);}await query('DELETE FROM settings WHERE key=?',[fixture+'rollback']);}
+try{
+  await cleanup();
+  const totals=await one('SELECT count(*) n,count(phone) phones FROM restaurants WHERE deleted=0');
+  check('all licensed facilities and phones migrated',()=>{assert.equal(totals.n,21875);assert.equal(totals.phones,16861);});
+  check('SQL placeholders preserve question marks in literals',()=>assert.equal(postgresSql("SELECT '?' AS value, ? AS input, 'it''s ?' AS quoted"),"SELECT '?' AS value, $1 AS input, 'it''s ?' AS quoted"));
+  await assert.rejects(db().batch([db().prepare('INSERT INTO settings VALUES(?,?)').bind(fixture+'rollback','before'),db().prepare('INSERT INTO missing_migration_test_table VALUES(?)').bind(1)]));
+  check('failed transaction rolls back every write',()=>{});assert.equal(await one('SELECT * FROM settings WHERE key=?',[fixture+'rollback']),null);
+  await query(upsertStatement('settings',['key','value']),[fixture+'rollback','one']);await query(upsertStatement('settings',['key','value']),[fixture+'rollback','two']);
+  check('PostgreSQL restore upsert updates rather than duplicates',()=>{});assert.equal((await one('SELECT value FROM settings WHERE key=?',[fixture+'rollback'])).value,'two');
+  const store=await one('SELECT r.id,r.phone,p.operator_name,p.representative_name FROM restaurants r JOIN restaurant_private_details p ON r.id=p.restaurant_id WHERE r.phone IS NOT NULL AND p.operator_name IS NOT NULL AND p.representative_name IS NOT NULL LIMIT 1');
+  signIn(null);assert.equal(await viewer(),null);assert.equal(await canReadPrivate(null,store.id),false);
+  const anonymous=await post({action:'create-list',name:'No access'});
+  check('anonymous state changes require a verified session',()=>assert.equal(anonymous.status,401));
+  for(const id of members)await query('INSERT INTO users(id,email,name,role,created_at) VALUES(?,?,?,?,?)',[id,id+'@example.test','Test',id.endsWith('admin')?'admin':'member',new Date().toISOString()]);
+  signIn(members[0]);const member=await viewer();assert.equal(member.role,'member');
+  const deniedAdmin=await post({action:'disclosure-mode',mode:'auto'});
+  check('members cannot change administrator settings',()=>assert.equal(deniedAdmin.status,403));
+  const cross=await post({action:'create-list',name:'Bad origin'},'https://other.invalid');
+  check('cross-origin writes are denied',()=>assert.equal(cross.status,403));
+  const created=await post({action:'create-list',name:'Migration test'});assert.equal(created.status,200);const {id:listId}=await created.json();
+  for(let i=0;i<2;i++)assert.equal((await post({action:'add-to-list',listId,ids:[store.id]})).status,200);
+  assert.equal((await one('SELECT count(*) n FROM sales_list_items WHERE list_id=?',[listId])).n,1);
+  check('list insertion is idempotent in PostgreSQL',()=>{});
+  const privateSearch=await search({operator:store.operator_name},member);
+  check('unapproved member cannot search private operator information',()=>assert.equal(privateSearch.total,0));
+  const locked=await exportList(new Request('http://127.0.0.1:3000/api/export?list='+listId));const lockedCsv=await locked.text();
+  check('unapproved CSV excludes operator and representative',()=>{assert.equal(locked.status,200);assert(!lockedCsv.includes(store.operator_name));assert(!lockedCsv.includes(store.representative_name));});
+  signIn(members[1]);assert.equal((await exportList(new Request('http://127.0.0.1:3000/api/export?list='+listId))).status,403);
+  check('another member cannot export or modify someone else\'s list',()=>{});assert.equal((await post({action:'remove-item',listId,id:store.id})).status,403);
+  signIn(members[0]);const inquiry=await post({action:'inquiry',restaurantId:store.id,company:'Test',name:'Test',email:'test@example.test',phone:'0312345678',purpose:'Migration permission test only',consent:true});assert.equal(inquiry.status,200);
+  const request=await one('SELECT id FROM inquiries WHERE user_id=?',[members[0]]);
+  signIn(members[2]);assert.equal((await post({action:'review-inquiry',id:request.id,status:'approved'})).status,200);
+  signIn(members[0]);assert.equal(await canReadPrivate(await viewer(),store.id),true);
+  const granted=await exportList(new Request('http://127.0.0.1:3000/api/export?list='+listId));
+  check('explicit store approval reveals corresponding CSV details',()=>{});assert((await granted.text()).includes(store.operator_name));
+  assert.equal((await post({action:'update-item',listId,id:store.id,status:'未接触',memo:'=1+1'})).status,200);
+  const safeCsv=await(await exportList(new Request('http://127.0.0.1:3000/api/export?list='+listId))).text();
+  check('CSV export escapes spreadsheet formulas',()=>assert(safeCsv.includes("'=1+1")));
+  signIn(members[2]);assert.equal((await post({action:'review-inquiry',id:request.id,status:'revoked'})).status,200);
+  signIn(members[0]);assert.equal(await canReadPrivate(await viewer(),store.id),false);
+  check('revoking approval removes access immediately',()=>{});
+  check('login return path rejects external and recursive redirects',()=>{for(const url of ['https://evil.invalid','//evil.invalid','/login?return_to=/login','/\\evil.invalid'])assert.equal(safeReturnTo(url),'/mypage');assert.equal(safeReturnTo('/restaurant/'+store.id),'/restaurant/'+store.id);});
+  await fs.writeFile('work/postgres-test-results.json',JSON.stringify({passed:checks.length,checks,environment:'local PostgreSQL-compatible PGlite',identity:'validated-runtime-context fixture; live Identity not tested',time:new Date().toISOString()},null,2));
+}finally{signIn(null);await cleanup();await closeDatabase();}

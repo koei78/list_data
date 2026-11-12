@@ -1,0 +1,1 @@
+export function SampleCTA(){return <aside className="sample-cta panel inset"><div><span className="badge">営業先の候補を探している方へ</span><h2>飲食店リストを無料CSVで、最大30件。</h2><p>掲載中の多摩・島しょ地域から選べます。店名・住所・電話番号・出典付き。簡単な入力後、その場でダウンロードできます。</p></div><a href="/sample-list" className="button primary">無料サンプルを依頼 →</a></aside>;}

@@ -1,0 +1,9 @@
+import {Breadcrumb,Title} from '../../components';
+import {publicMetadata} from '../../../lib/seo';
+import {jsonLd} from '../../../lib/directory';
+import {ORIGIN} from '../../../lib/config';
+import PhoneCleaner from './phone-cleaner';
+import {PublicResources} from '../../public-resources';
+
+export const metadata=publicMetadata('電話番号のハイフン除去・重複チェック｜無料ツール','電話番号の全角・半角やハイフンをそろえ、同じ番号の重複を確認。登録不要、ブラウザー内で最大2,000行を処理し、結果をCSVで保存できます。','/tools/phone-cleaner');
+export default function Page(){return <><Breadcrumb items={[["飲食店リスト","/restaurant-lists"],["電話番号の整理ツール"]]}/><Title eyebrow="登録不要・無料" title="電話番号のハイフン除去・重複チェック">営業リストの電話番号をそろえて、同じ番号が繰り返し入っていないか確認できます。</Title><p className="tool-privacy">貼り付けた内容はブラウザー内で処理します。このツールからサーバーへの送信・保存は行いません。</p><PhoneCleaner/><article className="panel guide-article"><h2>このツールでできること</h2><ul><li>全角数字を半角数字に変換し、空白・ハイフン・丸括弧を除きます。</li><li>「+81」で始まる日本の国番号表記を、0で始まる番号にそろえます。</li><li>整理後の番号が同じ行に「重複」と表示し、最初に出た行番号を示します。</li><li>結果をCSVで保存できます。元の行を残し、自動削除はしません。</li></ul><h2>「確認可」と「要確認」の意味</h2><p>「確認可」は、0で始まる10桁または11桁の形式に整理できたという意味です。実在する番号・現在つながる番号であることは確認していません。文字、内線、複数番号、短縮番号や海外番号が混ざった行は「要確認」になります。</p><h2>同じ電話番号でも、同じ店舗とは限りません</h2><p>本部や施設の代表番号を複数店舗が共有している場合があります。削除する前に、店舗名・住所・出典も比較してください。店舗名を調べたいときは<a href="/phone-search">飲食店の電話番号検索</a>で掲載情報を確認できます。</p><h2>Excelで電話番号の先頭の0を消さない方法</h2><p>CSVをダブルクリックして開くと、電話番号が数値に変換されることがあります。Excelの「データ」から「テキストまたはCSVから」を使い、番号列のデータ型を「テキスト」に指定してください。新しく作るなら、電話番号列を文字列に設定した<a href="/templates/sales-list">営業リストのExcelテンプレート</a>も利用できます。</p></article><PublicResources exclude="/tools/phone-cleaner"/><script type="application/ld+json" dangerouslySetInnerHTML={{__html:jsonLd({'@context':'https://schema.org','@type':'WebApplication',name:'電話番号のハイフン除去・重複チェック',url:ORIGIN+'/tools/phone-cleaner',applicationCategory:'BusinessApplication',operatingSystem:'Web browser',offers:{'@type':'Offer',price:'0',priceCurrency:'JPY'}})}}/></>;}
