@@ -1,0 +1,8 @@
+.git
+.netlify
+.env*
+!.env.example
+work
+outputs
+coverage
+*.tsbuildinfo

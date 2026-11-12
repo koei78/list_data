@@ -1,4 +1,16 @@
-# 東京飲食店データベース — Netlify版
+# 東京飲食店データベース
+
+## Vercelへの移行準備（2026-11-12）
+
+デプロイ先はVercelへ移行予定です。`vercel.json`でNext.jsとビルドコマンドを指定しています。以下のNetlify公開情報は移行前の運用記録です。Vercelへの本番切り替えはまだ完了していません。
+
+1. VercelでGitHubリポジトリ`koei78/list_data`を接続し、プロジェクトルートをこのフォルダーに設定します。Node.jsは22.xを使用します。
+2. `DATABASE_URL`に既存PostgreSQLの接続情報、`NEXT_PUBLIC_SITE_URL`にVercelの正式URLを設定します。既存DBを使う場合、初期化や初期データ投入は実行しません。新しいDBの場合は`netlify/database/migrations`のSQL適用と既存データ移行が別途必要です。
+3. `ADMIN_BOOTSTRAP_EMAIL`、`IMPORT_TOKEN`を安全に設定します。検証中は`PUBLIC_INDEXING=0`、`SURVEY_NOTIFICATIONS_ENABLED=0`にします。
+4. Netlify Identity、Netlify Blobs、Netlify FormsはVercelへ自動移行されません。管理者ログイン・バックアップ・通知の接続対応が必要です。既存ユーザーや権限を失わないよう、これらの確認前に旧環境を停止しないでください。
+5. `npm ci`、`npm run typecheck`、`npm run build`を実行し、Vercelのプレビューで`/api/health`、検索、アンケート、管理者ログイン、バックアップを確認してから本番に昇格します。
+
+Vercelのローカル接続情報（`.vercel/`）と環境変数ファイルはGit管理対象外です。
 
 公開URL: https://tenkai-restaurant-db.netlify.app/
 
