@@ -19,7 +19,7 @@ export async function surveyActor(token:string){
 export const workspaceViewer=cache(async()=>await viewer()||await surveyActor((await cookies()).get(SURVEY_COOKIE)?.value||''));
 export async function requireWorkspaceUser(req:Request){const user=await viewer()||await surveyActor(requestSurveyToken(req));if(!user)throw new HttpError(401,'簡単なアンケートに回答すると利用できます。');return user;}
 export async function limitSurvey(req:Request){
- const ip=process.env.NETLIFY==='true'?(req.headers.get('x-nf-client-connection-ip')||'unknown'):'local';
+ const ip=process.env.VERCEL==='1'?(req.headers.get('x-vercel-forwarded-for')||'unknown'):process.env.NETLIFY==='true'?(req.headers.get('x-nf-client-connection-ip')||'unknown'):'local';
  const bucket=Math.floor(Date.now()/3600000),key=digest(ORIGIN+'|'+ip+'|'+bucket);
  const accepted=await one('INSERT INTO survey_rate_limits(key,used,expires_at) VALUES(?,1,?) ON CONFLICT(key) DO UPDATE SET used=survey_rate_limits.used+1 WHERE survey_rate_limits.used<10 RETURNING used',[key,new Date((bucket+2)*3600000).toISOString()]);
  if(!accepted)throw new HttpError(429,'送信回数の上限です。時間をおいてお試しください。');

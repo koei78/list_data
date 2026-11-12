@@ -7,7 +7,7 @@ type Result={rows:any[],rowCount?:number|null,affectedRows?:number};
 type Client={query:(sql:string,values?:any[])=>Promise<Result>};
 let pool:Pool|undefined;
 let localDb:Promise<any>|undefined;
-const isLocal=()=>process.env.NETLIFY_LOCAL_DB==='1'&&process.env.NETLIFY!=='true';
+const isLocal=()=>process.env.NETLIFY_LOCAL_DB==='1'&&process.env.NETLIFY!=='true'&&process.env.VERCEL!=='1';
 async function local(){if(!localDb)localDb=import('@electric-sql/pglite').then(({PGlite})=>PGlite.create(process.env.LOCAL_PG_PATH||'./work/local-postgres'));return localDb;}
 function postgres(){if(!pool)pool=process.env.DATABASE_URL?new Pool({connectionString:process.env.DATABASE_URL,max:4,idleTimeoutMillis:5000,connectionTimeoutMillis:10000}):getDatabase().pool as Pool;return pool;}
 function normalizeRows(rows:any[]){return rows.map(row=>Object.fromEntries(Object.entries(row).map(([key,value])=>[key,['n','total','count','phones'].includes(key)&&typeof value==='string'&&/^\d+$/.test(value)?Number(value):value])));}
