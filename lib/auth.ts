@@ -1,9 +1,10 @@
 import {cache} from 'react';
 import {env} from './runtime';
 import {getUser} from '@netlify/identity';
+import {ownerIdentity} from './owner-auth';
 import {ORIGIN} from './config';
 import {one,run,now,db} from './db';
-export const viewer=cache(async()=>{const identity=await getUser();if(!identity?.email)return null;await run('INSERT OR IGNORE INTO users(id,email,name,created_at) VALUES(?,?,?,?)',[identity.id,identity.email,identity.name||identity.email,now()]);
+export const viewer=cache(async()=>{const identity=process.env.VERCEL==='1'?await ownerIdentity():await getUser();if(!identity?.email)return null;await run('INSERT OR IGNORE INTO users(id,email,name,created_at) VALUES(?,?,?,?)',[identity.id,identity.email,identity.name||identity.email,now()]);
  // Only a confirmed Identity account matching the configured owner can bootstrap an administrator.
  if(identity.confirmedAt&&env.ADMIN_BOOTSTRAP_EMAIL&&identity.email.toLowerCase()===env.ADMIN_BOOTSTRAP_EMAIL.toLowerCase())await run("UPDATE users SET role='admin' WHERE id=? AND NOT EXISTS (SELECT 1 FROM users WHERE role='admin')",[identity.id]);
  const user=await one('SELECT * FROM users WHERE id=?',[identity.id]);return user?.disabled?null:user;});

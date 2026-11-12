@@ -1,10 +1,9 @@
-import {getStore} from '@netlify/blobs';
+import {backupStore} from '../../../lib/backup-store';
 import {TABLE_KEYS,upsertStatement} from '../../../lib/sql';
 import {requireUser,sameOrigin,HttpError} from '../../../lib/auth';
 import {one,all,db,uid,now,audit} from '../../../lib/db';
 export const dynamic='force-dynamic';
 const TABLES=['data_sources','restaurants','restaurant_private_details','field_evidence','source_import_rows','users','survey_leads','survey_sessions','inquiries','disclosure_grants','favorites','sales_lists','sales_list_items','saved_searches','search_history','import_jobs','import_errors','merge_history','audit_logs','settings','seo_checks','error_logs'];
-function backupStore(){const store=getStore({name:'restaurant-backups',consistency:'strong'});return {put:(key:string,data:string)=>store.set(key,data),get:async(key:string)=>{const data=await store.get(key,{type:'text'});return data===null?null:{json:async()=>JSON.parse(data)};},keys:async(prefix:string)=>{const keys:string[]=[];for await(const page of store.list({prefix,paginate:true}))keys.push(...page.blobs.map(x=>x.key));return keys;}};}
 export async function GET(){try{await requireUser(true);const keys=await backupStore().keys('backups/');return Response.json({ids:keys.filter(x=>x.endsWith('/manifest.json')).map(x=>x.split('/')[1]).sort().reverse()},{headers:{'Cache-Control':'no-store'}});}catch{return Response.json({error:'管理者権限またはバックアップ接続を確認してください'},{status:403});}}
 export async function POST(req:Request){try{sameOrigin(req);const user=await requireUser(true),b=await req.json() as any,bucket=backupStore();if(b.op==='start'){const id=now().replace(/[:.]/g,'-')+'-'+uid().slice(0,8),tables=[];for(const table of TABLES){const n=await one(`SELECT count(*) n FROM ${table}`);tables.push({table,count:n.n});}await bucket.put(`backups/${id}/manifest.json`,JSON.stringify({id,tables,createdAt:now(),status:'pending'}));await audit(user.id,'backup-start',id);return Response.json({id,tables});}
  const id=String(b.id||'');if(!/^[\w-]+$/.test(id))throw new HttpError(400,'IDが不正です');const object=await bucket.get(`backups/${id}/manifest.json`);if(!object)throw new HttpError(404,'バックアップがありません');const manifest=await object.json() as any;

@@ -2,7 +2,7 @@ import type {Metadata} from 'next';
 import {ORIGIN,SITE_NAME} from './config';
 
 export const HOME_TITLE=`${SITE_NAME}｜店名・電話番号・地域で検索`;
-export const SITE_DESCRIPTION='東京都の飲食店を店名・電話番号・地域から検索。多摩・島しょ地域の公的な許可台帳をもとに、住所・業態・情報の出典を確認できます。基本情報は登録なしで閲覧できます。';
+export const SITE_DESCRIPTION='東京都・神奈川県・埼玉県・千葉県の飲食店を店名・電話番号・地域から検索。住所・営業時間・情報の出典を確認できます。基本情報は登録なしで閲覧できます。';
 
 export function publicMetadata(title:string,description:string,path:string,home=false):Metadata{
   const fullTitle=home?title:`${title} | ${SITE_NAME}`;

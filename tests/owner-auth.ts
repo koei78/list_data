@@ -1,0 +1,32 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {webcrypto,createHash} from 'node:crypto';
+import {PGlite} from '@electric-sql/pglite';
+import {verifyOwnerPassword,loginOwner,ownerIdentityFromToken,revokeOwnerSession} from '../lib/owner-auth';
+import {db,closeDatabase} from '../lib/database-driver';
+const directory=await fs.mkdtemp(path.resolve('work/owner-auth-test-'));
+process.env.NETLIFY_LOCAL_DB='1';process.env.LOCAL_PG_PATH=directory;process.env.ADMIN_BOOTSTRAP_EMAIL='owner-test@example.invalid';
+delete process.env.VERCEL;
+const local=await PGlite.create(directory);for(const name of (await fs.readdir('netlify/database/migrations')).filter(name=>name.endsWith('.sql')).sort())await local.exec(await fs.readFile('netlify/database/migrations/'+name,'utf8'));await local.close();
+const password='Synthetic-test-password-only',salt=webcrypto.getRandomValues(new Uint8Array(16));
+const key=await webcrypto.subtle.importKey('raw',new TextEncoder().encode(password),'PBKDF2',false,['deriveBits']);
+const bits=await webcrypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt,iterations:600000},key,256);
+const stored='pbkdf2_sha256$600000$'+Buffer.from(salt).toString('hex')+'$'+Buffer.from(bits).toString('hex');
+process.env.ADMIN_PASSWORD_HASH=stored;
+const request=new Request('http://127.0.0.1:3000/api/auth/login',{method:'POST'});
+try{
+ assert(await verifyOwnerPassword(password,stored));assert.equal(await verifyOwnerPassword('wrong',stored),false);assert.equal(await verifyOwnerPassword(password,'malformed'),false);
+ await assert.rejects(loginOwner(request,{email:'other@example.invalid',password}),error=>(error as any).status===401);
+ const token=await loginOwner(request,{email:process.env.ADMIN_BOOTSTRAP_EMAIL,password});assert.equal(token.length,43);
+ const identity=await ownerIdentityFromToken(token);assert(identity);assert.equal(identity.email,process.env.ADMIN_BOOTSTRAP_EMAIL);
+ const user=await db().prepare('SELECT role FROM users WHERE id=?').bind(identity.id).first();assert.equal(user.role,'admin');
+ assert.equal(await ownerIdentityFromToken('x'.repeat(43)),null);
+ const session=await db().prepare('SELECT token_hash FROM admin_sessions').first();assert.equal(session.token_hash,createHash('sha256').update(token).digest('hex'));assert.notEqual(session.token_hash,token);
+ process.env.ADMIN_PASSWORD_HASH=stored+'x';assert.equal(await ownerIdentityFromToken(token),null);process.env.ADMIN_PASSWORD_HASH=stored;
+ await db().prepare('UPDATE users SET disabled=1 WHERE id=?').bind(identity.id).run();assert.equal(await ownerIdentityFromToken(token),null);await db().prepare('UPDATE users SET disabled=0 WHERE id=?').bind(identity.id).run();
+ await revokeOwnerSession(token);assert.equal(await ownerIdentityFromToken(token),null);
+ for(let i=0;i<8;i++)await loginOwner(request,{email:'other@example.invalid',password:'wrong'}).catch(()=>{});
+ await assert.rejects(loginOwner(request,{email:process.env.ADMIN_BOOTSTRAP_EMAIL,password}),error=>(error as any).status===429);
+ console.log('PASS browser/server password compatibility, owner-only login, hashed sessions, tampering, credential rotation, disabled users, logout and rate limits');
+}finally{await closeDatabase();if(directory.startsWith(path.resolve('work')+path.sep))await fs.rm(directory,{recursive:true,force:true});}

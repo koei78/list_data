@@ -3,7 +3,7 @@ import {ORIGIN} from '../../lib/config';
 import {publicMetadata} from '../../lib/seo';
 import {Breadcrumb,Title,ScopeNote,formatNumber} from '../components';
 
-export const metadata=publicMetadata('地域別の飲食店一覧｜多摩・島しょ','東京都の多摩・島しょ地域の飲食店を市町村別に探せます。すべての一覧ページへ進み、店舗名・電話番号・住所と出典を確認できます。','/areas');
+export const metadata=publicMetadata('地域別の飲食店一覧｜東京・神奈川・埼玉・千葉','東京都の東京・神奈川・埼玉・千葉の飲食店を市町村別に探せます。すべての一覧ページへ進み、店舗名・電話番号・住所と出典を確認できます。','/areas');
 export default async function Areas(){
  const areas=await directoryAreas();
  const schema={'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:[{'@type':'ListItem',position:1,name:'トップ',item:ORIGIN+'/'},{'@type':'ListItem',position:2,name:'地域別の飲食店一覧',item:ORIGIN+'/areas'}]};

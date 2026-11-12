@@ -2,7 +2,13 @@
 
 ## Vercelへの移行準備（2026-11-12）
 
-Vercelの公開先は https://list-data-eight.vercel.app/ です。Neonの無料PostgreSQL（`list-data-postgres`）をVercelの本番環境に接続済みです。3つの既存マイグレーションを適用し、`/api/health`のDB接続成功とトップ・検索・アンケートページのHTTP 200を確認しました。新規DBのため旧Netlifyの店舗・会員・営業リストのデータ移行は未完了です。以下のNetlify公開情報は移行前の運用記録です。
+Vercelの公開先は https://list-data-eight.vercel.app/ です。Neonの無料PostgreSQL（`list-data-postgres`）をVercelの本番環境に接続済みです。利用者指定CSVの全258,405行を保存し、258,404店舗・有効な電話番号174,561件を取り込みました。店舗名が空の1行も原本行として保持し、全行のチェックサムを照合済みです。データは東京・神奈川・埼玉・千葉にまたがります。以下のNetlify公開情報は移行前の運用記録です。
+
+旧NetlifyのDBは利用上限によって無効化されており、直接の旧DB複製ではありません。旧環境の会員・問い合わせ・営業リストなどCSVに含まれない情報は取得できていません。元CSVは変更していません。`source_import_rows`が元の各項目・行番号・変換時の確認事項を保持します。
+
+Vercelの管理者認証は`ADMIN_BOOTSTRAP_EMAIL`と`ADMIN_PASSWORD_HASH`を使います。`/admin-setup`で本人がパスワードを入力し、ブラウザー内で生成した検証値だけをVercelのProduction環境変数へSecretとして設定します。パスワード自体は設定生成処理で送信・保存しません。設定後にProductionを再デプロイしてください。セッションは12時間有効で、DBにはトークンのハッシュだけを保存します。ログアウト・ユーザー無効化・パスワード検証値変更でアクセスを失います。Vercel以外では従来のNetlify認証を維持しています。
+
+バックアップはVercelの非公開Blobストア`list-data-backups`に保存します。接続情報は本番環境に限定し、原本行もバックアップ対象です。バックアップAPIは管理者認証を要求します。
 
 Vercelのビルドは`npm run vercel:build`です。`db:migrate`が`DATABASE_URL_UNPOOLED`（なければ`DATABASE_URL`）を使い、適用履歴・チェックサム・排他ロックを管理して未適用のSQLだけをトランザクションで適用します。既存テーブルを削除したり、店舗データを初期化する処理はありません。DB接続情報はVercelの連携が秘密の環境変数として管理し、ソースには含めません。
 

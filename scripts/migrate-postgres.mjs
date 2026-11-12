@@ -5,7 +5,8 @@ import {Client} from 'pg';
 
 const connectionString=process.env.DATABASE_URL_UNPOOLED||process.env.DATABASE_URL;
 if(!connectionString)throw new Error('DATABASE_URL is required for database migrations');
-const client=new Client({connectionString,connectionTimeoutMillis:15000});
+const url=new URL(connectionString);if(['require','verify-ca'].includes(url.searchParams.get('sslmode')||''))url.searchParams.set('sslmode','verify-full');
+const client=new Client({connectionString:url.toString(),connectionTimeoutMillis:15000});
 try{
   await client.connect();
   await client.query("SELECT pg_advisory_lock(821341755)");

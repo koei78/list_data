@@ -1,6 +1,7 @@
 import {getDatabase} from '@netlify/database';
 import {Pool,types} from 'pg';
 import {postgresSql} from './sql';
+import {databaseConnection} from './database-connection';
 
 types.setTypeParser(20,Number);
 type Result={rows:any[],rowCount?:number|null,affectedRows?:number};
@@ -9,7 +10,7 @@ let pool:Pool|undefined;
 let localDb:Promise<any>|undefined;
 const isLocal=()=>process.env.NETLIFY_LOCAL_DB==='1'&&process.env.NETLIFY!=='true'&&process.env.VERCEL!=='1';
 async function local(){if(!localDb)localDb=import('@electric-sql/pglite').then(({PGlite})=>PGlite.create(process.env.LOCAL_PG_PATH||'./work/local-postgres'));return localDb;}
-function postgres(){if(!pool)pool=process.env.DATABASE_URL?new Pool({connectionString:process.env.DATABASE_URL,max:4,idleTimeoutMillis:5000,connectionTimeoutMillis:10000}):getDatabase().pool as Pool;return pool;}
+function postgres(){if(!pool)pool=process.env.DATABASE_URL?new Pool({connectionString:databaseConnection(process.env.DATABASE_URL),max:4,idleTimeoutMillis:5000,connectionTimeoutMillis:10000}):getDatabase().pool as Pool;return pool;}
 function normalizeRows(rows:any[]){return rows.map(row=>Object.fromEntries(Object.entries(row).map(([key,value])=>[key,['n','total','count','phones'].includes(key)&&typeof value==='string'&&/^\d+$/.test(value)?Number(value):value])));}
 export class PreparedStatement{
   constructor(public sql:string,public values:any[]=[]){ }

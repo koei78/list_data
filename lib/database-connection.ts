@@ -1,0 +1,1 @@
+export function databaseConnection(value:string){const url=new URL(value);if(['require','verify-ca'].includes(url.searchParams.get('sslmode')||''))url.searchParams.set('sslmode','verify-full');return url.toString();}

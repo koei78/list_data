@@ -1,4 +1,16 @@
 import {env} from '../../../lib/runtime';
 import {importRecords} from '../../../lib/import';
 import {importCsvBatch,verifyCsvImport} from '../../../lib/csv-import';
-export async function POST(req:Request){if(!env.IMPORT_TOKEN||req.headers.get('authorization')!==`Bearer ${env.IMPORT_TOKEN}`)return Response.json({error:'Unauthorized'},{status:401});try{const body=await req.text();if(body.length>1500000)return Response.json({error:'Too large'},{status:413});const input=JSON.parse(body);if(input.mode==='csv')return Response.json(await importCsvBatch(input));if(input.mode==='verify-csv')return Response.json(await verifyCsvImport(input.sourceId));const {rows,source}=input;if(!Array.isArray(rows)||rows.length>100)return Response.json({error:'Max 100 rows'},{status:400});return Response.json(await importRecords(rows,source,'system:licensed-import'));}catch{return Response.json({error:'Import validation failed'},{status:400});}}
+import {verifyBackupStore} from '../../../lib/backup-store';
+export async function POST(req:Request){
+ if(!env.IMPORT_TOKEN||req.headers.get('authorization')!==`Bearer ${env.IMPORT_TOKEN}`)return Response.json({error:'Unauthorized'},{status:401});
+ try{
+  const body=await req.text();if(body.length>1500000)return Response.json({error:'Too large'},{status:413});
+  const input=JSON.parse(body);
+  if(input.mode==='csv')return Response.json(await importCsvBatch(input));
+  if(input.mode==='verify-csv')return Response.json(await verifyCsvImport(input.sourceId));
+  if(input.mode==='verify-backup')return Response.json(await verifyBackupStore());
+  const {rows,source}=input;if(!Array.isArray(rows)||rows.length>100)return Response.json({error:'Max 100 rows'},{status:400});
+  return Response.json(await importRecords(rows,source,'system:licensed-import'));
+ }catch(error:any){console.error('Import failed',{code:error.code||'VALIDATION',fields:error.issues?.map((issue:any)=>issue.path.join('.'))});return Response.json({error:'Import validation failed',code:error.code||'VALIDATION'},{status:400});}
+}

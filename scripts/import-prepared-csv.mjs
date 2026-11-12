@@ -3,7 +3,8 @@ import {createReadStream} from 'node:fs';
 import {createInterface} from 'node:readline';
 import {createHash} from 'node:crypto';
 import assert from 'node:assert/strict';
-const control=createInterface({input:process.stdin});
+if(process.stdin.isTTY)process.stdin.setRawMode(true);
+const control=createInterface({input:process.stdin,terminal:false});
 console.log('Waiting for connection configuration on stdin');
 const config=await new Promise(resolve=>control.once('line',line=>resolve(JSON.parse(line))));control.close();process.stdin.pause();
 const base='https://list-data-eight.vercel.app';
@@ -28,6 +29,7 @@ try{const saved=JSON.parse(await fs.readFile(checkpoint,'utf8'));if(saved.origin
 let writes=Promise.resolve(),batchNumber=0,checkedRows=0;const jobs=new Set();
 const canonical=raw=>JSON.stringify(Object.fromEntries(Object.keys(raw).sort().map(key=>[key,raw[key]])));
 async function send(rows,index){
+ for(const row of rows)if(row.record)for(const field of ['website','sns'])if(row.record[field]){try{const url=new URL(row.record[field]);if(!['http:','https:'].includes(url.protocol))throw new Error('Invalid URL');}catch{row.record[field]=null;row.issues.push(field+' URL形式を確認（原文は保存済み）');}}
  const proof=createHash('sha256').update(rows.map(row=>`${row.rowNumber}:${createHash('sha256').update(canonical(row.raw)).digest('hex')}\n`).join('')).digest('hex');
  const result=await post({mode:'csv',source:manifest.source,rows});assert.equal(result.staged,rows.length);assert.equal(result.sha256,proof);
  completed.add(index);checkedRows+=rows.length;const snapshot=JSON.stringify({original_sha256:manifest.original_sha256,completed:[...completed].sort((a,b)=>a-b)});writes=writes.then(()=>fs.writeFile(checkpoint,snapshot));

@@ -12,7 +12,7 @@ export async function POST(req:Request){try{
  const chunks:Uint8Array[]=[];let size=0;while(true){const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>16000){await reader.cancel();throw new HttpError(413,'入力内容が長すぎます。');}chunks.push(value);}
  let b:any;try{b=JSON.parse(Buffer.concat(chunks).toString('utf8'));}catch{throw new HttpError(400,'入力内容を確認してください。');}
  const filter=params.parse(b),a=filter.attribution;
- const message=[SAMPLE_MARKER,'地域：'+filter.municipality,'許可台帳の区分：'+(filter.category||'指定なし'),'追加のご相談：'+(filter.note||'なし'),'流入元：'+(a?.source||'direct')+' / '+(a?.medium||'none')+' / '+(a?.campaign||'none')].join('\n');
+ const message=[SAMPLE_MARKER,'地域：'+filter.municipality,'業態：'+(filter.category||'指定なし'),'追加のご相談：'+(filter.note||'なし'),'流入元：'+(a?.source||'direct')+' / '+(a?.medium||'none')+' / '+(a?.campaign||'none')].join('\n');
  const v=surveySchema.parse({...b,kind:'inquiry',message,restaurantId:undefined});
  await limitSurvey(req);
  const rows=await sampleRows(filter.municipality,filter.category);
