@@ -4,9 +4,12 @@ import {safeUrl} from './normalize';
 
 type Store={id:string,name:string,address:string,municipality:string,prefecture:string,phone?:string|null,hours?:string|null,category?:string,postal_code?:string|null,latitude?:number|null,longitude?:number|null,updated_at?:string,indexable?:number,business_status?:string};
 const compact=(value:string)=>value.replace(/\s+/g,' ').trim();
+const excerpt=(value:string,limit:number)=>{const characters=Array.from(value);return characters.length>limit?characters.slice(0,limit-1).join('')+'…':value;};
+export function restaurantSummary(store:Store){return `${store.name}の所在地は${compact(store.address)}です。${store.phone?`電話番号は${store.phone}です。`:'電話番号は未確認です。'}`;}
 export function restaurantDescription(store:Store){
- const details=[`${store.name}（${compact(store.address)}）の電話番号・住所・店舗情報。`,store.phone?`電話番号は${store.phone}。`:'電話番号は未確認です。',store.hours?`営業時間：${compact(store.hours).slice(0,90)}。`:'', '掲載元の情報と確認状況を掲載。現在の営業状況は店舗の公式情報でもご確認ください。'];
- return details.join('').slice(0,210);
+ const hours=store.hours?compact(store.hours).split('営業時間・定休日は変更')[0].trim():'';
+ const details=[restaurantSummary(store),hours?`営業時間：${excerpt(hours,90)}。`:'', '掲載元の情報と確認状況を掲載。現在の営業状況は店舗の公式情報でもご確認ください。'];
+ return excerpt(details.join(''),210);
 }
 export function restaurantMetadata(store:Store){
  const location=[store.prefecture,store.municipality].filter(value=>value&&value!=='未確認').join('・');
