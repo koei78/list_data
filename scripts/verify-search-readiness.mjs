@@ -8,7 +8,7 @@ for await(const line of createInterface({input:createReadStream('work/provided-c
 const samples=[...new Map([...first.values(),...last.values(),noPhone].filter(Boolean).map(row=>[row.id,row])).values()];
 const decode=text=>text.replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#x27;|&#39;|&apos;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>');
 async function get(path){const response=await fetch(new URL(path,base),{redirect:'manual',signal:AbortSignal.timeout(120000)});return {response,text:await response.text()};}
-const canonical=html=>decode(html.match(/<link[^>]+rel="canonical"[^>]+href="([^"]+)"/)?.[1]||'');
+const canonical=html=>{const value=decode(html.match(/<link[^>]+rel="canonical"[^>]+href="([^"]+)"/)?.[1]||'');return value?new URL(value).href:'';};
 const title=html=>decode(html.match(/<title>(.*?)<\/title>/s)?.[1]||'');
 const schemas=html=>[...html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/gs)].flatMap(match=>{const value=JSON.parse(match[1]);return value['@graph']||[value];});
 const pass=(name,detail={})=>{checks.push({name,...detail});console.log('PASS '+name);};
