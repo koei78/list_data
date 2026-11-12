@@ -6,7 +6,7 @@ import {Breadcrumb,Title,ScopeNote} from '../components';
 import {PublicResources} from '../public-resources';
 
 type Props={searchParams:Promise<Record<string,string|string[]|undefined>>};
-export async function generateMetadata({searchParams}:Props){const q=await searchParams;return {...publicMetadata('飲食店の電話番号検索｜番号から店舗名・住所を確認','飲食店の電話番号から、掲載施設の店舗名・住所・業態を検索。ハイフンあり・なし、全角数字に対応。東京の東京・神奈川・埼玉・千葉を収録しています。','/phone-search'),robots:{index:Object.keys(q).length===0,follow:true}};}
+export async function generateMetadata({searchParams}:Props){const q=await searchParams;return {...publicMetadata('飲食店の電話番号検索｜番号から店舗名・住所を確認','飲食店の電話番号から、掲載施設の店舗名・住所・業態を検索。ハイフンあり・なし、全角数字に対応。東京・神奈川・埼玉・千葉の掲載店舗を検索できます。','/phone-search'),robots:{index:Object.keys(q).length===0,follow:true}};}
 export default async function Page({searchParams}:Props){
   const q=await searchParams,submitted=Object.hasOwn(q,'phone'),raw=typeof q.phone==='string'?q.phone.slice(0,81):'';
   const normalized=submitted?normalizePhoneInput(raw):null;

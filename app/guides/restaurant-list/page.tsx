@@ -6,7 +6,7 @@ import {publicMetadata} from '../../../lib/seo';
 import {ORIGIN} from '../../../lib/config';
 import {jsonLd} from '../../../lib/directory';
 
-const title='飲食店の営業リストの作り方｜必要項目・Excel用テンプレート・管理手順';
+const title='飲食店の営業リストの作り方｜無料Excel・CSVと店舗検索の活用法';
 const description='飲食店の営業リストを作る手順を解説。対象地域の決め方、店名・電話番号・出典などの項目、重複確認、営業メモの残し方と、このサイトの操作手順を紹介します。記入用CSVテンプレート付き。';
 export const metadata=publicMetadata(title,description,'/guides/restaurant-list');
 const fields=[
@@ -21,11 +21,11 @@ const fields=[
 ];
 export default function ListGuide(){
  const schema={'@context':'https://schema.org','@graph':[
- {'@type':'Article',headline:title,description,datePublished:'2026-10-27',dateModified:'2026-10-28',inLanguage:'ja',mainEntityOfPage:ORIGIN+'/guides/restaurant-list',author:{'@type':'Organization',name:'株式会社てんかい',url:ORIGIN+'/'},publisher:{'@id':ORIGIN+'/#publisher','@type':'Organization',name:'株式会社てんかい',url:ORIGIN+'/'}},
+ {'@type':'Article',headline:title,description,datePublished:'2026-10-27',dateModified:'2026-11-12',inLanguage:'ja',mainEntityOfPage:ORIGIN+'/guides/restaurant-list',author:{'@type':'Organization',name:'株式会社てんかい',url:ORIGIN+'/'},publisher:{'@id':ORIGIN+'/#publisher','@type':'Organization',name:'株式会社てんかい',url:ORIGIN+'/'}},
  {'@type':'BreadcrumbList',itemListElement:[{'@type':'ListItem',position:1,name:'トップ',item:ORIGIN+'/'},{'@type':'ListItem',position:2,name:'飲食店リスト',item:ORIGIN+'/restaurant-lists'},{'@type':'ListItem',position:3,name:'営業リストの作り方',item:ORIGIN+'/guides/restaurant-list'}]}
  ]};
  return <><Breadcrumb items={[["飲食店リスト","/restaurant-lists"],["営業リストの作り方"]]}/><Title eyebrow="飲食店向け営業の準備" title="飲食店の営業リストの作り方">候補を集めるところから、情報の確認・重複整理・対応記録まで。Excel等で作る方法と、このサイトで作る方法を説明します。</Title>
- <p className="guide-byline">編集：株式会社てんかい　公開：2026年10月27日 ／ 更新：2026年10月28日</p>
+ <p className="guide-byline">編集：株式会社てんかい　公開：2026年10月27日 ／ 更新：2026年11月12日</p>
  <SampleCTA/>
  <div className="guide-layout"><nav className="panel inset guide-toc" aria-label="記事の目次"><h2>この記事の内容</h2><a href="#purpose">1. 対象を決める</a><a href="#collect">2. 候補を集める</a><a href="#fields">3. 項目をそろえる</a><a href="#verify">4. 情報・重複を確認する</a><a href="#manage">5. 営業の進捗を管理する</a><a href="#site-steps">このサイトでの作り方</a><a href="#template">CSVテンプレート</a><a href="#worked-example">三鷹市の記入例</a><a href="#excel-import">Excelへの読み込み</a><a href="#duplicate-example">重複整理の判断例</a></nav>
  <article className="panel guide-article">
@@ -38,5 +38,5 @@ export default function ListGuide(){
  <section id="site-steps"><h2>このサイトで飲食店リストを作る手順</h2><ol className="guide-steps"><li><strong>地域と店舗を調べる。</strong><a href="/areas">地域別一覧</a>または<a href="/restaurants">飲食店検索</a>を開きます。検索では店名・電話番号・市町村・業態を指定できます。</li><li><strong>アンケートに回答してリストを作る。</strong><a href="/lists">営業リスト管理</a>で、アンケート回答後に名前を入力して「リストを作成」を押します。例：「三鷹市・提案候補」。</li><li><strong>検索結果から追加する。</strong>飲食店検索で店舗をチェックし、「追加先リスト」を選んで「リストに追加」を押します。全選択は表示中のページの店舗が対象です。続きのページはページを進めて追加します。</li><li><strong>ステータスとメモを更新する。</strong>営業リスト管理で店舗ごとに編集します。同じ店舗IDを同じリストへ重複して追加することはありません。</li><li><strong>必要なら出力する。</strong>自分のリストの「CSV」または「Excel」を選びます。1ファイル5,000件までで、出力時の閲覧権限に応じて項目が含まれます。</li></ol><p className="muted">運営会社・決裁者情報は店舗単位の開示承認が必要です。情報が取得されていない場合は、承認後も未確認です。営業時間・駅・開業日など未取得の項目に検索条件を指定すると、候補が出なくなる場合があります。</p></section>
  <section id="template"><h2>Excel等で使える記入用CSVテンプレート</h2><p>店舗名・住所・電話番号・出典URL・確認日・営業ステータスなどの列を用意した空のテンプレートです。登録なしでダウンロードできます。店舗データは含みません。</p><a className="button primary" href="/templates/restaurant-sales-list.csv" download>記入用CSVテンプレートをダウンロード</a><p className="muted small-text">ExcelではCSVのインポート時に電話番号・店舗IDの列を文字列に指定すると、先頭の0等を保持できます。列の型を指定せず開くと、数字が変換される場合があります。独自管理用の列を含むため、本サイトへの取り込み用ファイルではありません。</p></section>
  <section><h2>まずは対象地域の候補を確認する</h2><p>条件に合う施設が含まれるか、出典や未確認項目を確認してからリストに保存してください。</p><div className="actions-row"><a className="button primary" href="/areas">地域別の飲食店一覧へ</a><a className="button" href="/restaurant-lists">収録範囲・利用できる機能を見る</a></div></section>
- <WorkedExample/></article></div><script type="application/ld+json" dangerouslySetInnerHTML={{__html:jsonLd(schema)}}/><PublicResources/></>;
+ <WorkedExample/><section id="faq"><h2>飲食店リストの作り方についてよくある質問</h2><h3>飲食店の営業リストは無料で作れますか？</h3><p>このサイトでは店名・住所・電話番号などの基本情報を無料で検索できます。アンケートに回答すると候補店舗を保存し、自分の営業リストからCSV・Excelで出力できます。自分で表を作る場合は、<a href="/templates/sales-list">無料のExcel・CSVテンプレート</a>も利用できます。</p><h3>店舗名を指定して情報を探すには？</h3><p><a href="/restaurants">飲食店検索</a>で店舗名を入力し、同名店がある場合は都道府県・市区町村・住所で区別します。店舗ページで電話番号と出典を確認してから、自分のリストへ保存してください。</p><h3>電話番号が分かる店舗だけを集めるには？</h3><p>候補店舗の基本情報を確認して、電話番号が掲載されている店舗をリストに追加します。少量で内容を確かめたい場合は、<a href="/sample-list">地域別の無料サンプル</a>から確認できます。電話番号の掲載と、現在つながることや営業連絡への同意は別です。</p><h3>CSVとExcelはどちらを選ぶとよいですか？</h3><p>別の営業管理システムへ取り込む場合はCSV、表の見た目や入力用の選択欄を使う場合はExcelが便利です。CSVをExcelで開く際は電話番号列を文字列として読み込み、先頭の0が残っているか原本と照合してください。</p></section></article></div><script type="application/ld+json" dangerouslySetInnerHTML={{__html:jsonLd(schema)}}/><PublicResources/></>;
 }

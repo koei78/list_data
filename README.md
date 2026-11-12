@@ -1,5 +1,13 @@
 # 東京飲食店データベース
 
+## 店舗ページと検索入口のSEO（2026-11-12）
+
+店舗ページは、店名・所在地・電話番号・営業時間の実データを使った固有のメタデータ、自己参照canonical、Restaurant / WebPage / BreadcrumbList構造化データを出力します。掲載元の店舗ページURLを出典として表示し、同じ地域の店舗や飲食店リスト・作り方ガイドへリンクします。未取得の評価・料金・営業時間の構造化データは作りません。閉店・非公開・削除・統合元を検索対象へ戻す変更はありません。
+
+検索入口は`/restaurant-lists`、作り方は`/guides/restaurant-list`、空の記入用ファイルは`/templates/sales-list`が担当します。任意条件の検索結果はnoindexとして、店舗ページ・地域一覧との重複を抑えます。地域のページ送りは各ページ自身をcanonicalにします。総店舗数・地域別件数の非表示は維持します。
+
+`node --import tsx tests/restaurant-seo.ts`でデータの正確性と構造化データの対応を、`node scripts/verify-search-readiness.mjs`で本番の各検索入口・代表店舗・全取り込み店舗のサイトマップ収録を確認します。後者は移行時の`work/provided-csv.ndjson`を参照します。技術検証、Googleのインデックス登録、実際の検索順位は別の結果です。順位・登録時期を保証するものではありません。
+
 ## Vercelへの移行（2026-11-12）
 
 Vercelの公開先は https://list-data-eight.vercel.app/ です。Neonの無料PostgreSQL（`list-data-postgres`）をVercelの本番環境に接続済みです。利用者指定CSVの全258,405行を保存し、258,404店舗・有効な電話番号174,561件を取り込みました。店舗名が空の1行も原本行として保持し、全行のチェックサムを照合済みです。データは東京・神奈川・埼玉・千葉にまたがります。以下のNetlify公開情報は移行前の運用記録です。
