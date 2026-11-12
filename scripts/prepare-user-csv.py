@@ -23,8 +23,10 @@ with open(path,encoding='utf-8-sig',newline='') as f,open(os.path.join(out,'prov
   errors=[];name=raw.get('name','').strip();address=raw.get('address','').strip();pref=pref_map.get(raw.get('prefecture','').strip().lower(),raw.get('prefecture','').strip())
   if not pref:
    found=re.match(r'^(東京都|神奈川県|埼玉県|千葉県)',address);pref=found[1] if found else '未確認'
-  rest=address[len(pref):] if address.startswith(pref) else address
-  municipality=next((match[1] for pattern in (r'^(.+?市)',r'^(.+?区)',r'^(.+?郡.+?[町村])',r'^(.+?[町村])') if (match:=re.match(pattern,rest))), '未確認')
+  rest=unicodedata.normalize('NFKC',re.sub('[\u200b-\u200f\u2060\ufeff]','',address)).strip()
+  for _ in range(3):
+   if rest.startswith(pref):rest=rest[len(pref):].strip()
+  municipality=next((match[1] for pattern in (r'^([^\s\d-]+?郡[^\s\d-]+?[町村])',r'^([^\s\d-]+?[市区])',r'^([^\s\d-]+?[町村])') if (match:=re.match(pattern,rest))), '未確認')
   phone_raw=unicodedata.normalize('NFKC',raw.get('phone','')).strip();digits=re.sub(r'\D','',phone_raw)
   if phone_raw.startswith('+81'):digits='0'+digits[2:]
   telephone=digits if re.fullmatch(r'0\d{9,10}',digits) else None

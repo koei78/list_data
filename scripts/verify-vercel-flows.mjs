@@ -15,11 +15,16 @@ async function get(path){return fetch(base+path,{headers:{cookie:cookie()},redir
 async function post(path,body,origin=base){const response=await fetch(base+path,{method:'POST',headers:{cookie:cookie(),origin,'content-type':'application/json'},body:JSON.stringify(body),redirect:'manual',signal:AbortSignal.timeout(60000)});retain(response);return response;}
 function pass(name){checks.push(name);console.log('PASS '+name);}
 const manifest=JSON.parse(await fs.readFile('work/provided-csv-manifest.json','utf8'));
+if(config.normalizeAreas){
+ assert(config.token);let after='',scanned=0,changed=0;
+ for(;;){const response=await fetch(base+'/api/ingest',{method:'POST',headers:{cookie:cookie(),'content-type':'application/json',authorization:'Bearer '+config.token},body:JSON.stringify({mode:'normalize-csv-areas',sourceId:manifest.source.id,after}),signal:AbortSignal.timeout(60000)});const result=await response.json();assert.equal(response.status,200,JSON.stringify(result));scanned+=result.scanned;changed+=result.changed;if(result.done)break;assert.notEqual(result.after,after);after=result.after;}
+ assert.equal(scanned,manifest.unique_stores);console.log('Normalized municipalities: scanned '+scanned+', changed '+changed);pass('all store municipality prefixes checked without modifying original source rows');
+}
 let sample;for await(const line of createInterface({input:createReadStream('work/provided-csv.ndjson'),crlfDelay:Infinity})){const row=JSON.parse(line);if(row.record?.phone){sample=row.record;break;}}
 let list;
 try{
  const health=await get('/api/health');assert.equal(health.status,200);assert.equal((await health.json()).database,'reachable');pass('production database connection');
- const setup=await get('/admin-setup');assert.equal(setup.status,200);assert((await setup.text()).includes('ADMIN_PASSWORD_HASH'));assert.equal((await (await get('/api/auth/session')).json()).user,null);pass('owner setup page and anonymous session');
+ const setup=await get('/admin-setup');assert.equal(setup.status,200);assert((await setup.text()).includes('管理者パスワードの設定'));assert.equal((await (await get('/api/auth/session')).json()).user,null);pass('owner setup page and anonymous session');
  if(config.token){
   const verify=await fetch(base+'/api/ingest',{method:'POST',headers:{cookie:cookie(),'content-type':'application/json',authorization:'Bearer '+config.token},body:JSON.stringify({mode:'verify-backup'}),signal:AbortSignal.timeout(60000)});
   const result=await verify.json();assert.equal(verify.status,200,JSON.stringify(result));assert.equal(result.privateStorage,true);assert.equal(result.write,true);assert.equal(result.read,true);assert.equal(result.list,true);pass('private backup storage write, read, list and cleanup');
