@@ -2,7 +2,9 @@
 
 ## Vercelへの移行準備（2026-11-12）
 
-デプロイ先はVercelへ移行予定です。`vercel.json`でNext.jsとビルドコマンドを指定しています。以下のNetlify公開情報は移行前の運用記録です。Vercelへの本番切り替えはまだ完了していません。
+Vercelの公開先は https://list-data-eight.vercel.app/ です。Neonの無料PostgreSQL（`list-data-postgres`）をVercelの本番環境に接続済みです。3つの既存マイグレーションを適用し、`/api/health`のDB接続成功とトップ・検索・アンケートページのHTTP 200を確認しました。新規DBのため旧Netlifyの店舗・会員・営業リストのデータ移行は未完了です。以下のNetlify公開情報は移行前の運用記録です。
+
+Vercelのビルドは`npm run vercel:build`です。`db:migrate`が`DATABASE_URL_UNPOOLED`（なければ`DATABASE_URL`）を使い、適用履歴・チェックサム・排他ロックを管理して未適用のSQLだけをトランザクションで適用します。既存テーブルを削除したり、店舗データを初期化する処理はありません。DB接続情報はVercelの連携が秘密の環境変数として管理し、ソースには含めません。
 
 1. VercelでGitHubリポジトリ`koei78/list_data`を接続し、プロジェクトルートをこのフォルダーに設定します。Node.jsは22.xを使用します。
 2. `DATABASE_URL`に既存PostgreSQLの接続情報、`NEXT_PUBLIC_SITE_URL`にVercelの正式URLを設定します。既存DBを使う場合、初期化や初期データ投入は実行しません。新しいDBの場合は`netlify/database/migrations`のSQL適用と既存データ移行が別途必要です。
