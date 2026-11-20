@@ -7,7 +7,7 @@ digest=hashlib.sha256()
 with open(path,'rb') as f:
  for block in iter(lambda:f.read(1024*1024),b''):digest.update(block)
 file_hash=digest.hexdigest()
-source={'id':'provided-tabelog-'+file_hash[:16],'name':'利用者提供の飲食店情報CSV','url':'https://tabelog.com/','license':'利用者提供データ','license_url':'https://tabelog.com/','record_date':None,'scope':'利用者が指定した一都三県の飲食店CSV。出典ページURLと原本の各項目を保存。内容の最新性・営業状況は未確認。'}
+source={'id':'provided-csv-'+file_hash[:16],'name':'利用者提供の飲食店情報CSV','url':'https://list-data-eight.vercel.app/data-sources','license':'利用者提供データ','license_url':'https://list-data-eight.vercel.app/terms','record_date':None,'scope':'利用者が指定した一都三県の飲食店CSV。出典ページURLと原本の各項目を保存。内容の最新性・営業状況は未確認。'}
 pref_map={'tokyo':'東京都','東京':'東京都','kanagawa':'神奈川県','神奈川':'神奈川県','saitama':'埼玉県','埼玉':'埼玉県','chiba':'千葉県','千葉':'千葉県'}
 def canonical(raw):return json.dumps(raw,ensure_ascii=False,sort_keys=True,separators=(',',':'))
 def url(value):
@@ -33,7 +33,7 @@ with open(path,encoding='utf-8-sig',newline='') as f,open(os.path.join(out,'prov
   if phone_raw and not telephone:errors.append('電話番号の形式を確認')
   reference=raw.get('url','').strip() or raw.get('final_url','').strip()
   number=re.search(r'/(\d{8})/?(?:\?|$)',reference)
-  identity='tabelog-'+(number[1] if number else hashlib.sha256((reference or pref+'\t'+name+'\t'+address).encode()).hexdigest()[:32])
+  identity='store-'+(number[1] if number else hashlib.sha256((reference or pref+'\t'+name+'\t'+address).encode()).hexdigest()[:32])
   if not name or len(name)>200:errors.append('店舗名が未取得または項目上限超過')
   if not address or len(address)>500:errors.append('住所が未取得または項目上限超過')
   hours=raw.get('business_hours','').strip()
