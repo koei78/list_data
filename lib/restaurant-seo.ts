@@ -9,12 +9,21 @@ const excerpt=(value:string,limit:number)=>{const characters=Array.from(value);r
 export function restaurantSummary(store:Store){return `${store.name}の所在地は${compact(store.address)}です。${store.phone?`電話番号は${store.phone}です。`:'電話番号は未確認です。'}`;}
 export function restaurantDescription(store:Store){
  const hours=store.hours?compact(store.hours).split('営業時間・定休日は変更')[0].trim():'';
- const details=[restaurantSummary(store),hours?`営業時間：${excerpt(hours,90)}。`:'', '掲載元の情報と確認状況を掲載。現在の営業状況は店舗の公式情報でもご確認ください。'];
- return excerpt(details.join(''),210);
+ const details=[
+  store.category?`${store.name}は${store.municipality}にある${compact(store.category)}です。`:`${store.name}の店舗情報。`,
+  `所在地は${compact(store.address)}です。`,
+  store.postal_code?`郵便番号は${compact(store.postal_code)}です。`:'',
+  store.phone?`電話番号は${compact(store.phone)}です。`:'電話番号は未確認です。',
+  hours?`営業時間：${excerpt(hours,75)}。`:'',
+  store.business_status?`営業状況：${compact(store.business_status)}。`:'',
+  '情報の出典と確認状況を掲載。最新情報は店舗の公式案内でもご確認ください。',
+ ];
+ return excerpt(details.filter(Boolean).join(''),210);
 }
 export function restaurantMetadata(store:Store){
  const location=[store.prefecture,store.municipality].filter(value=>value&&value!=='未確認').join('・');
- return {...publicMetadata(`${store.name}（${location}）｜電話番号・住所`,restaurantDescription(store),publicRestaurantPath(store.id)),robots:{index:!!store.indexable&&store.business_status!=='閉店',follow:true}};
+ const category=store.category&&store.category!=='未確認'?compact(store.category):'飲食店';
+ return {...publicMetadata(`${store.name}（${location}）｜${category}・電話番号`,restaurantDescription(store),publicRestaurantPath(store.id)),robots:{index:!!store.indexable&&store.business_status!=='閉店',follow:true}};
 }
 export function evidencePageUrl(note:string|undefined,fallback:string|undefined){
  try{const parsed=JSON.parse(note||'{}');const reference=publicSourceUrl(safeUrl(parsed.url));if(reference)return reference;}catch{}
