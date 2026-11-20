@@ -5,7 +5,7 @@ export function publicRestaurantId(id:string){
  return 'r-'+btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 }
 
-export function publicRestaurantPath(id:string){return '/restaurant/'+publicRestaurantId(id);}
+export function publicRestaurantPath(id:string){return '/restaurant/'+(id.startsWith('r-')?id:publicRestaurantId(id));}
 
 export function internalRestaurantId(pathId:string){
  if(!pathId.startsWith('r-'))return pathId;

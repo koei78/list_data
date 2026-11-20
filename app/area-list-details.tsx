@@ -1,4 +1,4 @@
-import {publicRestaurantPath} from '../lib/public-restaurant';
+import {publicRestaurantPath,publicRestaurantId} from '../lib/public-restaurant';
 import {areaDetail,samplePath} from '../lib/public-data';
 import {safeUrl} from '../lib/normalize';
 
@@ -8,7 +8,7 @@ export async function AreaListDetails({name,hasPhones}:{name:string,hasPhones:bo
  {hasPhones&&<p><a className="button primary" href={samplePath(name)}>{name}の無料CSVを取得 →</a></p>}
  <p>食品・備品の提案先や、訪問営業の候補をこの地域から探せます。所在地と出典を確認し、提案対象に合う店舗を選んでください。</p>
  <div className="tag-links">{categories.map(c=><a key={c.name} href={'/restaurants?'+new URLSearchParams({municipality:name,category:c.name})}>{c.name||'未分類'}</a>)}</div>
- {preview.length>0&&<><h3>{name}のリスト見本（公開情報から3件）</h3><div className="table-wrap"><table className="guide-table"><thead><tr><th>店舗名</th><th>住所</th><th>電話番号</th></tr></thead><tbody>{preview.map(r=><tr key={r.id}><th><a href={publicRestaurantPath(r.id)}>{r.name}</a></th><td>{r.address}</td><td>{r.phone}</td></tr>)}</tbody></table></div><p className="muted small-text">電話番号がある一般飲食店を店舗ID順に表示。おすすめ順位や営業確認済みの店舗ではありません。</p></>}
+ {preview.length>0&&<><h3>{name}のリスト見本（公開情報から3件）</h3><div className="table-wrap"><table className="guide-table"><thead><tr><th>店舗名</th><th>住所</th><th>電話番号</th></tr></thead><tbody>{preview.map(r=><tr key={publicRestaurantId(r.id)}><th><a href={publicRestaurantPath(r.id)}>{r.name}</a></th><td>{r.address}</td><td>{r.phone}</td></tr>)}</tbody></table></div><p className="muted small-text">電話番号がある一般飲食店を店舗ID順に表示。おすすめ順位や営業確認済みの店舗ではありません。</p></>}
  <h3>CSVで受け取れる項目と条件</h3><p>店舗名・住所・電話番号・業態・市町村・出典名・出典URL・原本基準日・照合日の9項目。無料サンプルは最大30件で、条件に合う電話番号掲載施設が30件未満ならその件数です。フォーム送信後、その場で取得できます。</p>
  {hasPhones&&<div className="actions-row"><a className="button primary" href={samplePath(name)}>{name}の無料CSVを取得</a><a className="button" href="/guides/restaurant-list#worked-example">Excelでの完成例を見る</a></div>}
  <h3>この地域の情報の確かめ方</h3><ul>{sources.map(s=><li key={s.url}><a href={safeUrl(s.url)||'/data-sources'} rel="noreferrer" target="_blank">{s.name}</a>：原本基準日 {s.record_date||'未確認'}</li>)}</ul>
